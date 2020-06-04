@@ -22,34 +22,28 @@ class Atom:
     __repr__ = __str__
 
 
-class Negation:
-    def __init__(self, inner):
-        self.inner = inner
-
-    def __str__(self):
-        return f'not({self.inner})'
-
-    __repr__ = __str__
-
-
 class Conjunction:
-    def __init__(self, left, right):
-        self.left = left
-        self.right = right
+    def __init__(self, children):
+        self.children = children
+
+    def __eq__(self, other):
+        return self.children == other.children
 
     def __str__(self):
-        return f'and({self.left}, {self.right})'
+        return f'and({", ".join(map(str, self.children))})'
 
     __repr__ = __str__
 
 
 class Disjunction:
-    def __init__(self, left, right):
-        self.left = left
-        self.right = right
+    def __init__(self, children):
+        self.children = children
+
+    def __eq__(self, other):
+        return self.children == other.children
 
     def __str__(self):
-        return f'or({self.left}, {self.right})'
+        return f'or({", ".join(map(str, self.children))})'
 
     __repr__ = __str__
 
@@ -59,25 +53,16 @@ class ExistentialQuantifier:
         self.variable = variable
         self.inner = inner
 
+    def __eq__(self, other):
+        return self.variable == other.variable and self.inner == other.inner
+
     def __str__(self):
         return f'exist({self.variable}, {self.inner})'
 
     __repr__ = __str__
 
 
-class UniversalQuantifier:
-    def __init__(self, variable, inner):
-        self.variable = variable
-        self.inner = inner
-
-    def __str__(self):
-        return f'forall({self.variable}, {self.inner})'
-
-    __repr__ = __str__
-
-
-Query = Union[Atom, Negation, Conjunction, Disjunction,
-              ExistentialQuantifier, UniversalQuantifier]
+Query = Union[Atom, Conjunction, Disjunction, ExistentialQuantifier]
 
 
 class ParseError(ValueError):
@@ -122,18 +107,10 @@ def parse_query(query: str, variables: Dict[str, Variable] = {}) -> Query:
     if operator_name is None:
         raise ParseError()
 
-    if operator_name == 'not':
-        if len(children) != 1:
-            raise ParseError()
-        return Negation(parse_query(children[0], variables))
     elif operator_name == 'and':
-        if len(children) != 2:
-            raise ParseError()
-        return Conjunction(parse_query(children[0], variables), parse_query(children[1], variables))
+        return Conjunction([parse_query(child, variables) for child in children])
     elif operator_name == 'or':
-        if len(children) != 2:
-            raise ParseError()
-        return Disjunction(parse_query(children[0], variables), parse_query(children[1], variables))
+        return Disjunction([parse_query(child, variables) for child in children])
     elif operator_name == 'exist':
         if len(children) != 2:
             raise ParseError()
@@ -141,12 +118,5 @@ def parse_query(query: str, variables: Dict[str, Variable] = {}) -> Query:
         variables = variables.copy()
         variables[children[0]] = variable
         return ExistentialQuantifier(variable, parse_query(children[1], variables))
-    elif operator_name == 'forall':
-        if len(children) != 2:
-            raise ParseError()
-        variable = Variable(children[0])
-        variables = variables.copy()
-        variables[children[0]] = variable
-        return UniversalQuantifier(variable, parse_query(children[1], variables))
     else:
         return Atom(operator_name, tuple(variables.get(child, child) for child in children))
