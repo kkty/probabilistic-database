@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Set
+from typing import Tuple, Set
 
 
 class Store:
@@ -19,15 +19,9 @@ class Store:
     def get(self, relation: str, tuple_: Tuple[str, ...]) -> float:
         return self.probabilities.get((relation, tuple_), 0.0)
 
-    def values(self, relation: Optional[str] = None, position: Optional[int] = None) -> Set[str]:
-        """Returns a set of all the values."""
-
-        s = set()
-        for relation_, tuple_ in self.probabilities:
-            if relation is not None and relation_ != relation:
-                continue
-            for position_, item in enumerate(tuple_):
-                if position is not None and position_ != position:
-                    continue
-                s.add(item)
-        return s
+    def domain(self) -> Set[str]:
+        domain_ = set()
+        for _, tuple_ in self.probabilities:
+            for item in tuple_:
+                domain_.add(item)
+        return domain_

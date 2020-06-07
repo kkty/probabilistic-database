@@ -7,7 +7,8 @@ def test_store():
     store.add('r1', ('x', 'y'), 0.5)
     store.add('r2', ('u', 'v', 'w'), 0.8)
     assert store.get('r1', ('x', 'y')) == 0.5
-    assert store.values() == set(['x', 'y', 'u', 'v', 'w'])
+    assert store.get('r1', ('x', 'z')) == 0.0
+    assert store.domain() == set(['x', 'y', 'u', 'v', 'w'])
 
 
 def test_store_arity_check():

@@ -3,9 +3,7 @@ from probabilistic_database.query import parse_query
 
 def test_parse_query():
     for query, expected in (
-        ('or(r1(x, y, z), r2(u, v, w))', 'or(r1(x, y, z), r2(u, v, w))'),
-        ('exist(x, r(x, y))', 'exist(variable(x), r(variable(x), y))'),
-        ('exist(y, and(r1(x, y), r2(y, z)))',
-         'exist(variable(y), and(r1(x, variable(y)), r2(variable(y), z)))'),
+        ('x, y | R(x, y), S(z)', '∃x ∃y R(variable(x), variable(y)) ∧ S(z)'),
+        ('R(x, y)', 'R(x, y)'),
     ):
         assert str(parse_query(query)) == expected
