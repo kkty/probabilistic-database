@@ -50,10 +50,13 @@ class EvaluationError(Exception):
     pass
 
 
-def evaluate_query(query: Query, store: Store) -> float:
+def evaluate_query(query: Query, store: Store, depth=0) -> float:
     """Evaluates the query using the store as a backend."""
 
-    print(f'evaluating: {query}', file=sys.stderr)
+    evaluate_query_ = functools.partial(
+        evaluate_query, store=store, depth=depth+1)
+
+    print('  ' * depth + f'evaluating: {query}', file=sys.stderr)
 
     if len(query.atoms) == 1:
         atom = query.atoms[0]
@@ -90,10 +93,10 @@ def evaluate_query(query: Query, store: Store) -> float:
 
         def evaluate_sub():
             for constant in store.domain():
-                yield evaluate_query(rewrite_query(query, variable, constant), store)
+                yield evaluate_query_(rewrite_query(query, variable, constant))
 
         return 1 - functools.reduce(operator.mul, ((1 - p) for p in evaluate_sub()))
     else:
         # Query(atoms1) and Query(atoms2) are independent.
 
-        return evaluate_query(Query(atoms1), store) * evaluate_query(Query(atoms2), store)
+        return evaluate_query_(Query(atoms1)) * evaluate_query_(Query(atoms2))
