@@ -3,7 +3,6 @@ from typing import Dict, Set, cast
 import itertools
 import functools
 import operator
-import sys
 
 from typing import Tuple
 from probabilistic_database.query import Atom, Query, Variable
@@ -50,13 +49,14 @@ class EvaluationError(Exception):
     pass
 
 
-def evaluate_query(query: Query, store: Store, depth=0) -> float:
+def evaluate_query(query: Query, store: Store, debug=False, depth=0) -> float:
     """Evaluates the query using the store as a backend."""
 
     evaluate_query_ = functools.partial(
-        evaluate_query, store=store, depth=depth+1)
+        evaluate_query, store=store, debug=debug, depth=depth+1)
 
-    print('  ' * depth + f'evaluating: {query}', file=sys.stderr)
+    if debug:
+        print('  ' * depth + f'evaluating: {query}')
 
     if len(query.atoms) == 1:
         atom = query.atoms[0]
