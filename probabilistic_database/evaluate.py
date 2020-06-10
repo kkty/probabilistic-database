@@ -69,6 +69,13 @@ def evaluate_query(query: Query, store: Store, depth=0) -> float:
     for variable in query.variables:
         variables[variable] = contain(query, variable)
 
+    if len(variables) == 0:
+        # There are no variables in the query.
+        # As we are assuming that there are no repeating relations,
+        # every atom is independent. So, the probability of the query is
+        # the product of the probabilities of each atom.
+        return functools.reduce(operator.mul, (evaluate_query_(Query([atom])) for atom in query.atoms))
+
     # Check if the query is hierarchical.
     for s1, s2 in itertools.product(variables.values(), variables.values()):
         if not s1.issubset(s2) and s2.issubset(s1) and s1 & s2:
